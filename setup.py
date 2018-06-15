@@ -24,6 +24,7 @@ setup(
     packages=[
         'activity_log',
         'activity_log.migrations',
+        'activity_log.management',
     ],
 
     url='https://github.com/scailer/django-user-activity-log/',
