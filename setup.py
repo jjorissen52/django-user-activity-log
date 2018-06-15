@@ -25,6 +25,7 @@ setup(
         'activity_log',
         'activity_log.migrations',
         'activity_log.management',
+        'activity_log.management.commands',
     ],
 
     url='https://github.com/scailer/django-user-activity-log/',
