@@ -8,6 +8,12 @@ from django.http import HttpResponseForbidden
 from .models import ActivityLog
 from . import conf
 
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:  # Django < 1.10
+    # Works perfectly for everyone using MIDDLEWARE_CLASSES
+    MiddlewareMixin = object
+
 
 def get_ip_address(request):
     for header in conf.IP_ADDRESS_HEADERS:
