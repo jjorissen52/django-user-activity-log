@@ -8,7 +8,9 @@ Features:
 
 Install:
 
-$ pip install django-user-activity-log
+```
+pip install https://github.com/jjorissen52/django-user-activity-log/tarball/master
+```
 
 settings.py:
 
@@ -77,7 +79,9 @@ class User(AbstractUser, UserMixin):
     pass
 ```
 
-$ python manage.py migrate & python manage.py migrate --database=logs
+```
+python manage.py migrate & python manage.py migrate --database=logs
+```
 
-If you use ACTIVITYLOG_AUTOCREATE_DB migrations to logs database 
+If you use `ACTIVITYLOG_AUTOCREATE_DB` migrations to logs database 
 will be run automatically.
