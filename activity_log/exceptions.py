@@ -1,0 +1,2 @@
+class ImproperylConfigured(BaseException):
+    pass
