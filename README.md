@@ -75,10 +75,12 @@ python manage.py migrate --database=logs
 - `ACTIVITYLOG_METHODS = ('POST', 'GET')` Specify HTTP methods to be logged.
 - `ACTIVITYLOG_STATUSES = (200, )` List of response statuses which are logged. By default - all logged.
     - Don't use with `ACTIVITYLOG_EXCLUDE_STATUSES`
-- `ACTIVITYLOG_EXCLUDE_STATUSES = (302, )` List of response statuses which are ignore.
+- `ACTIVITYLOG_EXCLUDE_STATUSES = (302, )` List of response statuses which are ignored.
     - Don't use with `ACTIVITYLOG_STATUSES`
 - `ACTIVITYLOG_EXCLUDE_URLS = ('/admin/activity_log/activitylog', )` URL substrings which are ignored.
-
+- `CELERY_APP_MODULE = None` specify from which module to import the celery app.
+- `CELERY_APP_NAME = 'app'` specify the name of the `celery.Celery` object to import from `CELERY_APP_MODULE`
+- `ACTIVITY_LOG_LIMIT = None` limits the number of stored activity logs to be between `ACTIVITY_LOG_LIMIT` and `ACTIVITY_LOG_LIMIT + 1000`
 
 # Track `LAST_ACTIVITY`
 
@@ -96,5 +98,30 @@ Don't forget to migrate!
 python manage.py migrate & python manage.py migrate --database=logs
 ```
 
-If you use `ACTIVITYLOG_AUTOCREATE_DB` migrations to logs database 
+If you use `ACTIVITYLOG_AUTOCREATE_DB` migrations to logs database
 will be run automatically.
+
+# Async Logging
+If you are using `celery`, with very little configuration you can use
+async logging so that database writes aren't bogging down your request times.
+
+#### settings.py
+```python
+CELERY_APP_MODULE = 'my_project.celery'
+```
+
+
+#### celery.py
+```python
+...
+app.autodiscover_tasks(packages=settings.BUSINESS_APPLICATION + ['activity_log'])
+...
+```
+
+# Log Limiting
+#### settings.py
+```python
+# will delete the oldest 1000 logs once ActivityLog.objects.count() == 4000
+ACTIVITY_LOG_LIMIT = 3000
+MIDDLEWARE += ['activity_log.middleware.ActivityLogLimitMiddleware']
+```

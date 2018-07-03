@@ -8,6 +8,7 @@ from django.core.exceptions import DisallowedHost
 from django.http import HttpResponseForbidden
 from .models import ActivityLog
 from . import conf
+from . import tasks
 
 
 try:
@@ -74,12 +75,33 @@ class ActivityLogMiddleware(MiddlewareMixin):
         else:
             return
 
-        ActivityLog.objects.create(
-            user_id=user_id,
-            user=user,
-            request_url=request.build_absolute_uri()[:255],
-            request_method=request.method,
-            response_code=response.status_code,
-            ip_address=get_ip_address(request),
-            extra_data=get_extra_data(request, response, body)
-        )
+        request_url, request_method, response_code, ip_address, extra_data = request.build_absolute_uri()[:255], request.method, \
+            response.status_code, get_ip_address(request), get_extra_data(request, response, body)
+
+        if conf.CELERY_APP_MODULE:
+            tasks.log_activity.delay(user_id, user, request_url, request_method, response_code, ip_address, extra_data)
+        else:
+            ActivityLog.objects.create(
+                user_id=user_id,
+                user=user,
+                request_url=request_url,
+                request_method=request_method,
+                response_code=response_code,
+                ip_address=ip_address,
+                extra_data=extra_data
+            )
+
+
+class ActivityLogLimitMiddleware(MiddlewareMixin):
+    """
+    Delete oldest 1000 logs once ACTIVITY_LOG_COUNT reaches conf.ACTIVITY_LOG_LIMIT + 1000
+    """
+    ACTIVITY_LOG_COUNT = ActivityLog.objects.count()
+
+    def process_response(self, request, response):
+        ActivityLogLimitMiddleware.ACTIVITY_LOG_COUNT += 1
+        if conf.ACTIVITY_LOG_LIMIT and ActivityLogLimitMiddleware.ACTIVITY_LOG_COUNT > conf.ACTIVITY_LOG_LIMIT + 1000:
+            to_delete_pks = ActivityLog.objects.order_by('pk')[:1000].values_list('pk')
+            ActivityLog.objects.filter(pk__in=to_delete_pks).delete()
+            ActivityLogLimitMiddleware.ACTIVITY_LOG_COUNT -= 1000
+        return response

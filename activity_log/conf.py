@@ -44,3 +44,7 @@ if LOG_DB_KEY and not settings.DATABASES.get(LOG_DB_KEY):
     db = settings.DATABASES['default'].copy()
     db['NAME'] = '{}_{}'.format(db['NAME'], LOG_DB_KEY)
     settings.DATABASES[LOG_DB_KEY] = db
+
+CELERY_APP_MODULE = getattr(settings, 'CELERY_APP_MODULE', None)
+CELERY_APP_NAME = getattr(settings, 'CELERY_APP_NAME', 'app')
+ACTIVITY_LOG_LIMIT = getattr(settings, 'ACTIVITY_LOG_LIMIT', None)
